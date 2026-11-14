@@ -1,11 +1,15 @@
+using System.Text.Json.Serialization;
+
 namespace Clauder.Domain.Entities;
 
 public class MediaFile
 {
     public int Id { get; set; }
     public int RecipeId { get; set; }
+    [JsonIgnore]
     public Recipe? Recipe { get; set; }
     public int? ReviewId { get; set; } // Can be attached to review or recipe directly
+    [JsonIgnore]
     public Review? Review { get; set; }
     public required string FileName { get; set; }
     public required string MediaType { get; set; } // "image", "video"

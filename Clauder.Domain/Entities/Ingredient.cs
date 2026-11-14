@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Clauder.Domain.Entities;
 
 public class Ingredient
@@ -8,5 +10,6 @@ public class Ingredient
     public string? Unit { get; set; } // "g", "ml", "pz", etc.
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [JsonIgnore]
     public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }
