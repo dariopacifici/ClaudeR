@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddDbContext<ClauerDbContext>(options =>
-    options.UseSqlite("Data Source=clauder.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=clauder.db"));
 
 builder.Services.AddCors(options =>
 {
