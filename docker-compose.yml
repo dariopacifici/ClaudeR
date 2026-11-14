@@ -6,9 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: clauder-app
-    ports:
-      - "85:5000"      # HTTP on port 85
-      - "8443:5001"    # HTTPS internal (mapped to port 8443)
+    ports: []  # No external ports - only accessible via Nginx
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
@@ -26,13 +24,12 @@ services:
       retries: 3
       start_period: 40s
 
-  # Optional: Nginx reverse proxy for HTTPS termination
+  # Nginx reverse proxy for HTTPS termination
   nginx:
     image: nginx:alpine
     container_name: clauder-nginx
     ports:
-      - "443:443"     # HTTPS on port 443
-      - "80:80"       # HTTP redirect on port 80
+      - "85:443"      # HTTPS on port 85 (external)
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
