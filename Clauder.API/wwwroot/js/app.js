@@ -76,6 +76,7 @@ function updateUIForLoggedInUser() {
 }
 
 function showLogin() {
+  document.getElementById('loginSection').style.display = 'block';
   document.getElementById('appContent').style.display = 'none';
   document.getElementById('bottomNav').style.display = 'none';
   navigateToPage('login');
@@ -324,6 +325,10 @@ async function createRecipe() {
     });
 
     if (response.ok) {
+      const recipe = await response.json();
+      const publishResponse = await fetch(`${API_BASE_URL}/recipes/${recipe.id}/publish`, { method: 'POST' });
+      if (!publishResponse.ok) throw new Error('Publish failed');
+
       alert('Ricetta creata con successo!');
       // Reset form
       document.getElementById('createRecipeForm').reset();
