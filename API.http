@@ -1,0 +1,131 @@
+### Claude'r API Test Requests
+@baseUrl = http://localhost:5000/api
+
+### Get all recipes
+GET {{baseUrl}}/recipes
+
+### Get recipes filtered by nationality
+GET {{baseUrl}}/recipes?nationality=Italiana&recipeType=Primo
+
+### Get leaderboard
+GET {{baseUrl}}/ratings/leaderboard
+
+### Get all users
+GET {{baseUrl}}/users
+
+### Get user by ID
+GET {{baseUrl}}/users/1
+
+### Login - Romina
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+  "username": "romina",
+  "password": "romina123"
+}
+
+### Login - Claudia
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+  "username": "claudia",
+  "password": "claudia123"
+}
+
+### Create a new recipe
+POST {{baseUrl}}/recipes
+Content-Type: application/json
+
+{
+  "title": "Spaghetti alla Carbonara",
+  "description": "Un classico della cucina romana, cremosa e deliziosa",
+  "instructions": "1. Cuoci gli spaghetti\n2. Prepara il guanciale\n3. Mescola con le uova",
+  "nationality": "Italiana",
+  "recipeType": "Primo",
+  "servingsCount": 4,
+  "prepTimeMinutes": 10,
+  "cookTimeMinutes": 20,
+  "createdByUserId": 1
+}
+
+### Create a new ingredient
+POST {{baseUrl}}/ingredients
+Content-Type: application/json
+
+{
+  "name": "Guanciale",
+  "description": "Carne di maiale salata e speziata",
+  "unit": "g"
+}
+
+### Add ingredient to recipe
+POST {{baseUrl}}/ingredients/add-to-recipe
+Content-Type: application/json
+
+{
+  "recipeId": 1,
+  "ingredientId": 1,
+  "quantity": 150,
+  "unit": "g"
+}
+
+### Rate a recipe
+POST {{baseUrl}}/ratings
+Content-Type: application/json
+
+{
+  "recipeId": 1,
+  "userId": 1,
+  "score": 5,
+  "comment": "Incredibilmente delizioso!"
+}
+
+### Create a review (Romina can add reviews)
+POST {{baseUrl}}/reviews
+Content-Type: application/json
+
+{
+  "recipeId": 1,
+  "userId": 1,
+  "title": "Un vero capolavoro",
+  "content": "La ricetta è perfetta, gli ingredienti sono freschi e il risultato è meraviglioso.",
+  "category": "Tasting Notes",
+  "isPublished": true
+}
+
+### Get recipe reviews
+GET {{baseUrl}}/reviews/recipe/1
+
+### Get recipe with all details
+GET {{baseUrl}}/recipes/1
+
+### Update recipe
+PUT {{baseUrl}}/recipes/1
+Content-Type: application/json
+
+{
+  "title": "Spaghetti alla Carbonara (Ricetta Romana)",
+  "description": "La vera carbonara romana, cremosa e autentica",
+  "nationality": "Italiana",
+  "recipeType": "Primo"
+}
+
+### Publish a recipe
+POST {{baseUrl}}/recipes/1/publish
+
+### Get all ingredients
+GET {{baseUrl}}/ingredients
+
+### Get recipe ingredients
+GET {{baseUrl}}/ingredients/recipe-ingredient/1
+
+### Update user profile
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "displayName": "Romina - Chef",
+  "avatarUrl": "https://example.com/avatar.jpg"
+}
