@@ -1,0 +1,11 @@
+/home/dario/Source/Claudia/Clauder.Domain/bin/Debug/net10.0/Clauder.Domain.deps.json
+/home/dario/Source/Claudia/Clauder.Domain/bin/Debug/net10.0/Clauder.Domain.dll
+/home/dario/Source/Claudia/Clauder.Domain/bin/Debug/net10.0/Clauder.Domain.pdb
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.AssemblyInfoInputs.cache
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.AssemblyInfo.cs
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.csproj.CoreCompileInputs.cache
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.dll
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/refint/Clauder.Domain.dll
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.pdb
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/ref/Clauder.Domain.dll

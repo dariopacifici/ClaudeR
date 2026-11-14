@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Clauder.API/Clauder.API.csproj" />
+  <Project Path="Clauder.Data/Clauder.Data.csproj" />
+  <Project Path="Clauder.Domain/Clauder.Domain.csproj" />
+</Solution>
