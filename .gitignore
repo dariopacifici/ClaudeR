@@ -1,0 +1,17 @@
+# Docker & Deployment
+certs/
+.dockerignore
+
+# Local test database
+clauder.db
+clauder.db-shm
+clauder.db-wal
+
+# Uploads
+uploads/
+
+# IDE
+.vscode/
+.vs/
+*.user
+*.suo
