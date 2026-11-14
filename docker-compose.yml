@@ -13,6 +13,7 @@ services:
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/clauder.db
     volumes:
       - clauder-db:/app/data              # Database persistence
+      - clauder-uploads:/app/uploads      # Recipe photos and videos
       - ./certs:/app/certs:ro             # SSL certificates (read-only)
     restart: unless-stopped
     networks:
@@ -41,6 +42,8 @@ services:
 
 volumes:
   clauder-db:
+    driver: local
+  clauder-uploads:
     driver: local
 
 networks:

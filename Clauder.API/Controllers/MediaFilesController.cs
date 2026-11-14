@@ -9,6 +9,8 @@ namespace Clauder.API.Controllers;
 [Route("api/[controller]")]
 public class MediaFilesController : ControllerBase
 {
+    private const long MaxUploadBytes = 100L * 1024 * 1024;
+
     private readonly ClauerDbContext _context;
     private readonly IWebHostEnvironment _env;
 
@@ -19,10 +21,17 @@ public class MediaFilesController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [RequestSizeLimit(MaxUploadBytes)]
     public async Task<ActionResult<MediaFile>> UploadMedia([FromForm] IFormFile file, [FromForm] int recipeId, [FromForm] int? reviewId, [FromForm] int uploadedByUserId, [FromForm] string? caption)
     {
         if (file == null || file.Length == 0)
             return BadRequest("File is required");
+
+        var mediaType = file.ContentType?.StartsWith("image/") == true ? "image"
+            : file.ContentType?.StartsWith("video/") == true ? "video"
+            : null;
+        if (mediaType == null)
+            return BadRequest("Only image and video files are allowed");
 
         var recipe = await _context.Recipes.FindAsync(recipeId);
         if (recipe == null)
@@ -35,8 +44,7 @@ public class MediaFilesController : ControllerBase
                 return NotFound("Review not found");
         }
 
-        var mediaType = file.ContentType?.Contains("image") == true ? "image" : "video";
-        var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         var uploadsFolder = Path.Combine(_env.ContentRootPath, "uploads");
         Directory.CreateDirectory(uploadsFolder);
         var filePath = Path.Combine(uploadsFolder, fileName);
