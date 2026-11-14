@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Clauder.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dc06412506f8a4edf83219c069bd08f352a6599b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+96faa7b06c6ad1027bf15df84ae2e77cb8cf8054")]
 [assembly: System.Reflection.AssemblyProductAttribute("Clauder.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Clauder.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
