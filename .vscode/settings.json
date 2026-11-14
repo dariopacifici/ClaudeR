@@ -1,0 +1,93 @@
+{
+  // Editor Settings
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "ms-dotnettools.csharp",
+  "editor.rulers": [80, 120],
+  "editor.renderWhitespace": "selection",
+  "editor.fontFamily": "'Fira Code', 'Consolas', monospace",
+  "editor.fontSize": 13,
+  "editor.lineHeight": 1.5,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+
+  // C# Settings
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.organizeImportsOnFormat": true,
+  "csharp.semanticHighlighting.enabled": true,
+  "csharp.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
+  "csharp.inlayHints.enableInlayHintsForImplicitVariableTypes": true,
+  "csharp.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
+  "csharp.inlayHints.enableInlayHintsForTypes": true,
+
+  // Files
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.git": true,
+    "**/.vscode": false,
+    "**/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/.git/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.git": true,
+    "**/node_modules": true
+  },
+
+  // Git
+  "git.ignoreLimitWarning": true,
+  "git.autofetch": true,
+
+  // Debug
+  "debug.console": "integratedTerminal",
+  "debug.internalConsoleOptions": "neverOpen",
+
+  // Terminal
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.fontSize": 12,
+  "terminal.integrated.lineHeight": 1.3,
+
+  // Extensions
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // Project specific
+  "dotnet.projectSelector": "${workspaceFolder}/Clauder.slnx",
+  "omnisharp.defaultLaunchSolution": "${workspaceFolder}/Clauder.slnx",
+
+  // Recommended extensions (will show notification)
+  "extensions.recommendations": [
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.vscode-dotnet-runtime",
+    "ms-vscode.makefile-tools",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "GitHub.Copilot",
+    "esbenp.prettier-vscode",
+    "christian-kohler.path-intellisense",
+    "wayou.vscode-todo-highlight"
+  ]
+}

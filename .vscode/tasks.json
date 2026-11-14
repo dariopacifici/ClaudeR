@@ -1,0 +1,303 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🔨 build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Clauder.slnx",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "🏃 run (API only)",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/Clauder.API/Clauder.API.csproj",
+        "--no-build"
+      ],
+      "cwd": "${workspaceFolder}/Clauder.API",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "🧹 clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/Clauder.slnx"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "📦 restore",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "restore",
+        "${workspaceFolder}/Clauder.slnx"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "✅ build & restore",
+      "dependsOn": ["📦 restore", "🔨 build"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "🐳 docker-build",
+      "command": "docker",
+      "type": "process",
+      "args": [
+        "build",
+        "-t",
+        "clauder:latest",
+        "-f",
+        "${workspaceFolder}/Dockerfile",
+        "${workspaceFolder}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🐳 docker-up (local HTTPS test)",
+      "command": "docker-compose",
+      "type": "process",
+      "args": [
+        "up",
+        "--build",
+        "-d"
+      ],
+      "cwd": "${workspaceFolder}",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🐳 docker-down",
+      "command": "docker-compose",
+      "type": "process",
+      "args": [
+        "down"
+      ],
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🐳 docker-logs",
+      "command": "docker-compose",
+      "type": "process",
+      "args": [
+        "logs",
+        "-f",
+        "clauder-api"
+      ],
+      "cwd": "${workspaceFolder}",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🚀 deploy-auto (ONE-COMMAND)",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "${workspaceFolder}/auto-deploy.sh"
+      ],
+      "cwd": "${workspaceFolder}",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📤 deploy-manual (step by step)",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "${workspaceFolder}/deploy.sh"
+      ],
+      "cwd": "${workspaceFolder}",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 generate-certs",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "mkdir -p certs && openssl req -x509 -newkey rsa:4096 -keyout certs/clauder.key -out certs/clauder.crt -days 365 -nodes -subj '/C=IT/ST=Italy/L=Italy/O=Clauder/CN=clauder.local' && echo '✅ Certificates generated'"
+      ],
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🌐 test-local-api",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "echo 'Testing API on localhost:5000...' && curl -s http://localhost:5000/api/recipes | jq . && echo 'API is running!'"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🌐 test-docker-api",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "echo 'Testing API on Docker (HTTPS)...' && curl -sk https://localhost/api/recipes | jq . && echo 'Docker API is running!'"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🌐 test-remote-api",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "echo 'Testing remote API...' && curl -sk https://85.215.170.136:85/api/recipes | jq . && echo 'Remote API is running!'"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "📊 server-status",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "echo '📊 Server Status' && echo '' && echo 'Containers:' && docker-compose ps && echo '' && echo 'Logs (last 10 lines):' && docker-compose logs --tail=10"
+      ],
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🔐 ssh-remote",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "ssh root@85.215.170.136"
+      ],
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "📋 ssh-logs-remote",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "ssh root@85.215.170.136 'cd /opt/clauder && docker-compose logs -f'"
+      ],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🔄 ssh-restart-remote",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "ssh root@85.215.170.136 'cd /opt/clauder && docker-compose restart && echo \"✅ Containers restarted\"'"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "💾 ssh-backup-remote",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "ssh root@85.215.170.136 'cp /opt/clauder/data/clauder.db /opt/clauder/data/clauder.db.backup && echo \"✅ Database backed up\"'"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "📖 open-docs",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "echo 'Opening documentation...' && code ${workspaceFolder}/QUICK_START.md ${workspaceFolder}/DEPLOYMENT.md"
+      ],
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "🎓 open-all-docs",
+      "command": "bash",
+      "type": "shell",
+      "args": [
+        "-c",
+        "code ${workspaceFolder}/QUICK_START.md ${workspaceFolder}/DEPLOYMENT.md ${workspaceFolder}/CLAUDE.md ${workspaceFolder}/README.md"
+      ],
+      "presentation": {
+        "reveal": "silent"
+      }
+    }
+  ]
+}

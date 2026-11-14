@@ -11,7 +11,7 @@ clauder.db-wal
 uploads/
 
 # IDE
-.vscode/
+# .vscode/ - Shared configuration (committed to repo)
 .vs/
 *.user
 *.suo
