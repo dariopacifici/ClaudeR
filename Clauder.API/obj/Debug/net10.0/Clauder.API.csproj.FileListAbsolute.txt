@@ -207,3 +207,8 @@
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/Clauder.API.pdb
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/Clauder.API.genruntimeconfig.cache
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/ref/Clauder.API.dll
+/home/dario/Source/Claudia/Clauder.API/bin/Debug/net10.0/Clauder.API.staticwebassets.runtime.json
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/Clauder.API.sourcelink.json
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/17p3s38hja-{0}-65f4mby7ga-65f4mby7ga.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/v54dkfga5x-{0}-oourjnw80b-oourjnw80b.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/bxze752ly3-{0}-x6cqx3a7cg-x6cqx3a7cg.gz

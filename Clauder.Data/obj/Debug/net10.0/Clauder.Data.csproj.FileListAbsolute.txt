@@ -61,3 +61,4 @@
 /home/dario/Source/Claudia/Clauder.Data/obj/Debug/net10.0/Clauder.Data.pdb
 /home/dario/Source/Claudia/Clauder.Data/obj/Debug/net10.0/Clauder.Data.genruntimeconfig.cache
 /home/dario/Source/Claudia/Clauder.Data/obj/Debug/net10.0/ref/Clauder.Data.dll
+/home/dario/Source/Claudia/Clauder.Data/obj/Debug/net10.0/Clauder.Data.sourcelink.json

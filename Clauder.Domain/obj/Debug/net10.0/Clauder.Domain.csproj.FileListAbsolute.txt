@@ -9,3 +9,4 @@
 /home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/refint/Clauder.Domain.dll
 /home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.pdb
 /home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/ref/Clauder.Domain.dll
+/home/dario/Source/Claudia/Clauder.Domain/obj/Debug/net10.0/Clauder.Domain.sourcelink.json
