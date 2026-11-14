@@ -210,5 +210,8 @@
 /home/dario/Source/Claudia/Clauder.API/bin/Debug/net10.0/Clauder.API.staticwebassets.runtime.json
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/Clauder.API.sourcelink.json
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/17p3s38hja-{0}-65f4mby7ga-65f4mby7ga.gz
-/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/v54dkfga5x-{0}-oourjnw80b-oourjnw80b.gz
-/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/bxze752ly3-{0}-6ld3dnlsl2-6ld3dnlsl2.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/4il1n4wgat-{0}-smrhucd2aq-smrhucd2aq.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/wz7wvltd1i-{0}-urpzks0qg7-urpzks0qg7.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/v54dkfga5x-{0}-zj1c1a9oie-zj1c1a9oie.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/bxze752ly3-{0}-i18a9cpdta-i18a9cpdta.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/cs3eeel14n-{0}-kh4zxmixkf-kh4zxmixkf.gz
