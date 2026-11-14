@@ -1,9 +1,13 @@
 // Clauder App - Main JavaScript
 const API_BASE_URL = '/api';
+const APP_VERSION = '1.1.0';
 let currentUser = null;
+let editingRecipeId = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+  document.title = `Claude'r v${APP_VERSION} - Le Ricette di Claudia`;
+  document.querySelectorAll('[data-app-version]').forEach(el => el.textContent = `v${APP_VERSION}`);
   loadCurrentUser();
   setupEventListeners();
   navigateToPage(getPageFromURL());
@@ -105,7 +109,7 @@ async function login() {
     localStorage.setItem('userRole', data.role);
     localStorage.setItem('userName', data.username);
 
-    currentUser = data;
+    currentUser = { ...data, id: data.userId };
     updateUIForLoggedInUser();
     navigateToPage('home');
   } catch (error) {
@@ -146,9 +150,7 @@ async function loadRecipes(filter = {}) {
     recipesContainer.innerHTML = recipes.map(recipe => `
       <div class="col-md-4 col-sm-6 col-12 mb-3">
         <div class="card recipe-card h-100">
-          <div style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
-            ${getEmojiForsRecipeType(recipe.recipeType)}
-          </div>
+          ${renderRecipeCover(recipe)}
           <div class="badge-nationality">${recipe.nationality}</div>
           <div class="badge-category">${recipe.recipeType}</div>
           <div class="card-body">
@@ -156,10 +158,7 @@ async function loadRecipes(filter = {}) {
             <p class="card-text text-muted" style="font-size: 0.9rem;">
               ${recipe.description.substring(0, 80)}...
             </p>
-            <div class="recipe-rating">
-              ${'⭐'.repeat(Math.round(recipe.ratings?.length > 0 ? (recipe.ratings.reduce((a, b) => a + b.score, 0) / recipe.ratings.length) : 0))}
-              <span style="font-size: 0.9rem; color: #95A5A6;">(${recipe.ratings?.length || 0})</span>
-            </div>
+            ${renderRatingStars(recipe)}
             <div class="recipe-info">
               <span>⏱️ ${recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
               <span>👨‍🍳 ${recipe.servingsCount} porzioni</span>
@@ -188,14 +187,109 @@ function getEmojiForsRecipeType(type) {
   return emojis[type] || '🍽️';
 }
 
+function renderRecipeCover(recipe) {
+  const cover = recipe.mediaFiles?.find(m => !m.reviewId && m.mediaType === 'image');
+  if (cover) {
+    return `<img src="${cover.fileUrl}" alt="${recipe.title}" style="width: 100%; height: 200px; object-fit: cover;">`;
+  }
+  return `
+    <div style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%); height: 200px; display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
+      ${getEmojiForsRecipeType(recipe.recipeType)}
+    </div>
+  `;
+}
+
+function renderRecipeMedia(recipe) {
+  const media = recipe.mediaFiles?.filter(m => !m.reviewId) || [];
+  if (media.length === 0) return '';
+
+  return `
+    <div class="mb-3">
+      ${media.map(m => m.mediaType === 'video'
+        ? `<video src="${m.fileUrl}" controls class="w-100 rounded mb-2"></video>`
+        : `<img src="${m.fileUrl}" alt="" class="w-100 rounded mb-2">`).join('')}
+    </div>
+  `;
+}
+
+function renderRatingStars(recipe) {
+  const ratings = recipe.ratings || [];
+  const average = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length : 0;
+  const roundedAverage = Math.round(average);
+
+  const stars = [1, 2, 3, 4, 5].map(score => `
+    <span class="star ${score <= roundedAverage ? 'active' : ''}" onclick="rateRecipe(${recipe.id}, ${score})">★</span>
+  `).join('');
+
+  return `
+    <div class="star-rating">
+      ${stars}
+      <span class="text-muted small ms-2">${average.toFixed(1)} (${ratings.length})</span>
+    </div>
+  `;
+}
+
+async function rateRecipe(recipeId, score) {
+  if (!currentUser) {
+    alert('Accedi per votare');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/ratings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipeId,
+        userId: currentUser.id,
+        score,
+        comment: ''
+      })
+    });
+
+    if (!response.ok) throw new Error('Rating failed');
+
+    await loadRecipes();
+    if (document.getElementById('recipeModal').classList.contains('show')) {
+      await viewRecipe(recipeId);
+    }
+  } catch (error) {
+    console.error('Error rating recipe:', error);
+    alert('Voto non registrato');
+  }
+}
+
+function isRecipeOwner(recipe) {
+  return currentUser !== null && recipe.createdByUserId === currentUser.id;
+}
+
+function renderOwnerActions(recipe) {
+  if (!isRecipeOwner(recipe)) return '';
+
+  const publishAction = recipe.isPublished
+    ? `<button class="btn btn-outline-secondary" onclick="setRecipePublished(${recipe.id}, false)">📝 Metti in bozza</button>`
+    : `<button class="btn btn-success" onclick="setRecipePublished(${recipe.id}, true)">🚀 Pubblica</button>`;
+
+  return `
+    <div class="d-flex flex-wrap gap-2 border-top pt-3">
+      <button class="btn btn-primary" onclick="editRecipe(${recipe.id})">✏️ Modifica</button>
+      ${publishAction}
+      <button class="btn btn-danger" onclick="deleteRecipe(${recipe.id})">🗑️ Elimina</button>
+    </div>
+  `;
+}
+
 async function viewRecipe(recipeId) {
   try {
-    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}`);
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}`, {
+      headers: { 'X-User-Id': String(currentUser?.id ?? '') }
+    });
     const recipe = await response.json();
 
     const modal = new bootstrap.Modal(document.getElementById('recipeModal'));
-    document.getElementById('modalRecipeTitle').textContent = recipe.title;
+    document.getElementById('modalRecipeTitle').textContent = recipe.isPublished ? recipe.title : `${recipe.title} (bozza)`;
     document.getElementById('modalRecipeContent').innerHTML = `
+      ${renderRecipeMedia(recipe)}
       <div class="mb-3">
         <h6>Descrizione</h6>
         <p>${recipe.description}</p>
@@ -214,10 +308,9 @@ async function viewRecipe(recipeId) {
       </div>
       <div class="mb-3">
         <h6>Valuta questa ricetta</h6>
-        <div class="star-rating" onclick="rateRecipe(event, ${recipeId})">
-          ${'☆'.repeat(5)}
-        </div>
+        ${renderRatingStars(recipe)}
       </div>
+      ${renderOwnerActions(recipe)}
     `;
     modal.show();
   } catch (error) {
@@ -225,30 +318,102 @@ async function viewRecipe(recipeId) {
   }
 }
 
-async function rateRecipe(event, recipeId) {
-  if (event.target.classList.contains('star')) {
-    const stars = event.currentTarget.querySelectorAll('.star');
-    const rating = Array.from(stars).indexOf(event.target) + 1;
+async function setRecipePublished(recipeId, publish) {
+  const action = publish ? 'publish' : 'unpublish';
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/ratings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipeId,
-          userId: currentUser.id,
-          score: rating,
-          comment: ''
-        })
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/${action}`, {
+      method: 'POST',
+      headers: { 'X-User-Id': String(currentUser.id) }
+    });
+    if (!response.ok) throw new Error('Status change failed');
 
-      if (response.ok) {
-        alert(`Grazie! Hai dato ${rating} stelle!`);
-        loadRecipes();
-      }
-    } catch (error) {
-      console.error('Error rating recipe:', error);
+    await viewRecipe(recipeId);
+    await loadRecipes();
+    await loadMyRecipes();
+  } catch (error) {
+    console.error('Error changing recipe status:', error);
+    alert('Operazione non riuscita');
+  }
+}
+
+async function deleteRecipe(recipeId) {
+  if (!confirm('Eliminare definitivamente questa ricetta?')) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}`, {
+      method: 'DELETE',
+      headers: { 'X-User-Id': String(currentUser.id) }
+    });
+    if (!response.ok) throw new Error('Delete failed');
+
+    bootstrap.Modal.getInstance(document.getElementById('recipeModal'))?.hide();
+    await loadRecipes();
+    await loadMyRecipes();
+  } catch (error) {
+    console.error('Error deleting recipe:', error);
+    alert('Eliminazione non riuscita');
+  }
+}
+
+async function editRecipe(recipeId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}`, {
+      headers: { 'X-User-Id': String(currentUser.id) }
+    });
+    const recipe = await response.json();
+
+    document.getElementById('newRecipeTitle').value = recipe.title;
+    document.getElementById('newRecipeDescription').value = recipe.description;
+    document.getElementById('newRecipeInstructions').value = recipe.instructions ?? '';
+    document.getElementById('newRecipeNationality').value = recipe.nationality;
+    document.getElementById('newRecipeType').value = recipe.recipeType;
+    document.getElementById('newRecipeServings').value = recipe.servingsCount;
+    document.getElementById('newRecipePrepTime').value = recipe.prepTimeMinutes;
+    document.getElementById('newRecipeCookTime').value = recipe.cookTimeMinutes;
+
+    editingRecipeId = recipeId;
+    document.getElementById('createRecipeBtn').textContent = '💾 Salva modifiche';
+    bootstrap.Modal.getInstance(document.getElementById('recipeModal'))?.hide();
+    navigateToPage('create-recipe');
+  } catch (error) {
+    console.error('Error loading recipe for edit:', error);
+    alert('Impossibile aprire la ricetta');
+  }
+}
+
+function resetRecipeForm() {
+  editingRecipeId = null;
+  document.getElementById('createRecipeForm').reset();
+  document.getElementById('createRecipeBtn').textContent = '✨ Crea Ricetta';
+}
+
+async function loadMyRecipes() {
+  if (!currentUser) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/mine`, {
+      headers: { 'X-User-Id': String(currentUser.id) }
+    });
+    const recipes = await response.json();
+
+    const container = document.getElementById('myRecipesList');
+    if (recipes.length === 0) {
+      container.innerHTML = '<p class="text-muted">Non hai ancora ricette.</p>';
+      return;
     }
+
+    container.innerHTML = recipes.map(recipe => `
+      <div class="d-flex justify-content-between align-items-center border-top py-2">
+        <div>
+          <div class="fw-bold">${recipe.title}</div>
+          <small class="text-muted">${recipe.isPublished ? '🟢 Pubblicata' : '📝 Bozza'}</small>
+        </div>
+        <button class="btn btn-outline-primary" onclick="viewRecipe(${recipe.id})">Apri</button>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Error loading my recipes:', error);
   }
 }
 
@@ -291,7 +456,7 @@ async function loadLeaderboard() {
   }
 }
 
-// Create Recipe
+// Create or update recipe
 async function createRecipe() {
   const title = document.getElementById('newRecipeTitle').value;
   const description = document.getElementById('newRecipeDescription').value;
@@ -307,37 +472,61 @@ async function createRecipe() {
     return;
   }
 
+  const recipeData = {
+    title,
+    description,
+    instructions,
+    nationality,
+    recipeType,
+    servingsCount,
+    prepTimeMinutes,
+    cookTimeMinutes
+  };
+  const wasEditing = editingRecipeId !== null;
+
   try {
-    const response = await fetch(`${API_BASE_URL}/recipes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        description,
-        instructions,
-        nationality,
-        recipeType,
-        servingsCount,
-        prepTimeMinutes,
-        cookTimeMinutes,
-        createdByUserId: currentUser.id
-      })
-    });
+    let recipe;
 
-    if (response.ok) {
-      const recipe = await response.json();
-      const publishResponse = await fetch(`${API_BASE_URL}/recipes/${recipe.id}/publish`, { method: 'POST' });
+    if (wasEditing) {
+      const updateResponse = await fetch(`${API_BASE_URL}/recipes/${editingRecipeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': String(currentUser.id) },
+        body: JSON.stringify(recipeData)
+      });
+      if (!updateResponse.ok) throw new Error('Update failed');
+      recipe = await updateResponse.json();
+    } else {
+      const response = await fetch(`${API_BASE_URL}/recipes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...recipeData, createdByUserId: currentUser.id })
+      });
+      if (!response.ok) throw new Error('Create failed');
+      recipe = await response.json();
+
+      const publishResponse = await fetch(`${API_BASE_URL}/recipes/${recipe.id}/publish`, {
+        method: 'POST',
+        headers: { 'X-User-Id': String(currentUser.id) }
+      });
       if (!publishResponse.ok) throw new Error('Publish failed');
-
-      alert('Ricetta creata con successo!');
-      // Reset form
-      document.getElementById('createRecipeForm').reset();
-      navigateToPage('home');
-      loadRecipes();
     }
+
+    for (const file of document.getElementById('newRecipeMedia').files) {
+      const mediaForm = new FormData();
+      mediaForm.append('file', file);
+      mediaForm.append('recipeId', recipe.id);
+      mediaForm.append('uploadedByUserId', currentUser.id);
+      const uploadResponse = await fetch(`${API_BASE_URL}/mediafiles/upload`, { method: 'POST', body: mediaForm });
+      if (!uploadResponse.ok) throw new Error('Upload failed');
+    }
+
+    alert(wasEditing ? 'Ricetta aggiornata!' : 'Ricetta creata con successo!');
+    resetRecipeForm();
+    navigateToPage('home');
+    loadRecipes();
   } catch (error) {
-    console.error('Error creating recipe:', error);
-    alert('Errore nella creazione della ricetta');
+    console.error('Error saving recipe:', error);
+    alert('Errore nel salvataggio della ricetta');
   }
 }
 
@@ -348,6 +537,7 @@ function loadUserProfile() {
   document.getElementById('profileName').textContent = currentUser.displayName || currentUser.username;
   document.getElementById('profileEmail').textContent = currentUser.email;
   document.getElementById('profileRole').textContent = currentUser.role;
+  loadMyRecipes();
 }
 
 // Event Listeners Setup
@@ -365,6 +555,7 @@ function setupEventListeners() {
   bottomNavLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
+      if (link.dataset.navigate === 'create-recipe') resetRecipeForm();
       navigateToPage(link.dataset.navigate);
     });
   });
@@ -377,6 +568,7 @@ function setupEventListeners() {
 
   // Logout
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
+  document.getElementById('profileLogoutBtn')?.addEventListener('click', logout);
 
   // Create Recipe
   document.getElementById('createRecipeBtn')?.addEventListener('click', createRecipe);
