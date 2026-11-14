@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude'r - Le Ricette di Claudia</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Login Section -->
+  <div id="loginSection">
+    <div class="container-fluid" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--primary-gradient);">
+      <div class="text-center text-white mb-5">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">🍝👩‍🍳</div>
+        <h1 class="display-4 fw-bold">Claude'r</h1>
+        <p class="lead">Le Ricette di Claudia</p>
+      </div>
+
+      <div class="card" style="width: 100%; max-width: 400px; border-radius: 1.5rem; border: none;">
+        <div class="card-body p-4">
+          <h4 class="text-center mb-4">Benvenuto</h4>
+
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="romina o claudia" value="romina">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••" value="romina123">
+          </div>
+
+          <button id="loginBtn" class="btn btn-primary btn-lg w-100 mb-3">Accedi</button>
+
+          <hr>
+
+          <p class="text-center text-muted mb-0" style="font-size: 0.9rem;">
+            <strong>Demo:</strong> romina/romina123 o claudia/claudia123
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Content -->
+  <div id="appContent" style="display: none;">
+    <!-- Header -->
+    <nav class="navbar navbar-dark sticky-top">
+      <div class="container-fluid">
+        <span class="navbar-brand">
+          <span class="emoji">🍝</span>Claude'r
+        </span>
+        <div class="d-flex align-items-center gap-3">
+          <span class="text-white" id="userDisplayName"></span>
+          <button id="logoutBtn" class="btn btn-outline-light btn-sm">Esci</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div data-page="home" style="display: none;">
+      <div class="hero-section">
+        <h1>🍽️ Le Tue Ricette</h1>
+        <p>Scopri, crea e valuta ricette incredibili</p>
+      </div>
+
+      <div class="container">
+        <div class="row mb-4">
+          <div class="col-md-6 col-12">
+            <select id="filterNationality" class="form-select">
+              <option value="">Tutte le nazionalità</option>
+              <option value="Italiana">Italiana 🇮🇹</option>
+              <option value="Giapponese">Giapponese 🇯🇵</option>
+              <option value="Messicana">Messicana 🇲🇽</option>
+              <option value="Cinese">Cinese 🇨🇳</option>
+              <option value="Francese">Francese 🇫🇷</option>
+              <option value="Americana">Americana 🇺🇸</option>
+            </select>
+          </div>
+          <div class="col-md-6 col-12">
+            <select id="filterType" class="form-select">
+              <option value="">Tutti i tipi</option>
+              <option value="Primo">Primo 🍝</option>
+              <option value="Secondo">Secondo 🍗</option>
+              <option value="Dolce">Dolce 🍰</option>
+              <option value="Antipasto">Antipasto 🥗</option>
+              <option value="Contorno">Contorno 🥦</option>
+              <option value="Bevanda">Bevanda 🥤</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="recipesList" class="row">
+          <div class="loader"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg rounded-circle position-fixed" style="bottom: 100px; right: 20px; width: 60px; height: 60px; font-size: 1.5rem;" data-navigate="create-recipe" title="Crea ricetta">
+        ➕
+      </button>
+    </div>
+
+    <!-- Create Recipe Page -->
+    <div data-page="create-recipe" style="display: none;">
+      <div class="hero-section">
+        <h1>✨ Crea Ricetta</h1>
+        <p>Condividi la tua ricetta con la comunità</p>
+      </div>
+
+      <div class="container mb-5">
+        <div class="card">
+          <div class="card-body">
+            <form id="createRecipeForm">
+              <div class="mb-3">
+                <label class="form-label">Titolo Ricetta *</label>
+                <input type="text" id="newRecipeTitle" class="form-control" placeholder="Es: Pasta alla Carbonara" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Descrizione *</label>
+                <textarea id="newRecipeDescription" class="form-control" rows="3" placeholder="Descrivi la tua ricetta..." required></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Istruzioni</label>
+                <textarea id="newRecipeInstructions" class="form-control" rows="4" placeholder="Passaggi di preparazione..."></textarea>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 col-12">
+                  <label class="form-label">Nazionalità</label>
+                  <select id="newRecipeNationality" class="form-select">
+                    <option value="Italiana">Italiana 🇮🇹</option>
+                    <option value="Giapponese">Giapponese 🇯🇵</option>
+                    <option value="Messicana">Messicana 🇲🇽</option>
+                    <option value="Cinese">Cinese 🇨🇳</option>
+                    <option value="Francese">Francese 🇫🇷</option>
+                    <option value="Americana">Americana 🇺🇸</option>
+                  </select>
+                </div>
+                <div class="col-md-6 col-12">
+                  <label class="form-label">Tipo</label>
+                  <select id="newRecipeType" class="form-select">
+                    <option value="Primo">Primo 🍝</option>
+                    <option value="Secondo">Secondo 🍗</option>
+                    <option value="Dolce">Dolce 🍰</option>
+                    <option value="Antipasto">Antipasto 🥗</option>
+                    <option value="Contorno">Contorno 🥦</option>
+                    <option value="Bevanda">Bevanda 🥤</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-4 col-6">
+                  <label class="form-label">Porzioni</label>
+                  <input type="number" id="newRecipeServings" class="form-control" value="4" min="1">
+                </div>
+                <div class="col-md-4 col-6">
+                  <label class="form-label">Prep (min)</label>
+                  <input type="number" id="newRecipePrepTime" class="form-control" value="15" min="0">
+                </div>
+                <div class="col-md-4 col-6">
+                  <label class="form-label">Cottura (min)</label>
+                  <input type="number" id="newRecipeCookTime" class="form-control" value="30" min="0">
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button type="button" id="createRecipeBtn" class="btn btn-primary btn-lg">
+                  ✨ Crea Ricetta
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Page -->
+    <div data-page="leaderboard" style="display: none;">
+      <div class="hero-section">
+        <h1>🏆 Leaderboard</h1>
+        <p>Le ricette più apprezzate</p>
+      </div>
+
+      <div class="container mb-5">
+        <div id="leaderboardList">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div data-page="profile" style="display: none;">
+      <div class="hero-section">
+        <h1>👤 Il Mio Profilo</h1>
+        <p>Gestisci il tuo account</p>
+      </div>
+
+      <div class="container mb-5">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">👨‍🍳</div>
+              <h3 id="profileName"></h3>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <p id="profileEmail" class="form-control-plaintext"></p>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Ruolo</label>
+              <p id="profileRole" class="form-control-plaintext"></p>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button id="logoutBtn" class="btn btn-danger btn-lg">Esci dall'app</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h5 class="mb-0">Informazioni App</h5>
+          </div>
+          <div class="card-body">
+            <p><strong>Nome:</strong> Claude'r - Le Ricette di Claudia</p>
+            <p><strong>Versione:</strong> 1.0.0</p>
+            <p><strong>Descrizione:</strong> L'app perfetta per gestire, condividere e scoprire ricette incredibili!</p>
+            <p class="text-muted mb-0"><small>Backend: .NET 10 | Database: SQLite | Frontend: Bootstrap 5</small></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe Detail Modal -->
+  <div class="modal fade" id="recipeModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen-sm-down">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalRecipeTitle"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="modalRecipeContent"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+          <button type="button" class="btn btn-primary">Condividi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottomNav" class="bottom-nav" style="display: none;">
+    <div class="nav justify-content-center">
+      <a data-navigate="home" class="nav-link active">
+        <span class="nav-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a data-navigate="create-recipe" class="nav-link">
+        <span class="nav-icon">➕</span>
+        <span>Crea</span>
+      </a>
+      <a data-navigate="leaderboard" class="nav-link">
+        <span class="nav-icon">🏆</span>
+        <span>Top</span>
+      </a>
+      <a data-navigate="profile" class="nav-link">
+        <span class="nav-icon">👤</span>
+        <span>Profilo</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <style>
+    body {
+      padding-bottom: 80px;
+    }
+  </style>
+</body>
+</html>

@@ -69,7 +69,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
+
+// Serve index.html for SPA routing
+app.MapFallbackToFile("index.html");
 
 app.Run();
