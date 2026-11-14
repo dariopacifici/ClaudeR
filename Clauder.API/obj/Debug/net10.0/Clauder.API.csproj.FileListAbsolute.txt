@@ -211,4 +211,4 @@
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/Clauder.API.sourcelink.json
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/17p3s38hja-{0}-65f4mby7ga-65f4mby7ga.gz
 /home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/v54dkfga5x-{0}-oourjnw80b-oourjnw80b.gz
-/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/bxze752ly3-{0}-x6cqx3a7cg-x6cqx3a7cg.gz
+/home/dario/Source/Claudia/Clauder.API/obj/Debug/net10.0/compressed/bxze752ly3-{0}-6ld3dnlsl2-6ld3dnlsl2.gz

@@ -15,7 +15,6 @@
   // C# Settings
   "omnisharp.enableEditorConfigSupport": true,
   "omnisharp.enableRoslynAnalyzers": true,
-  "omnisharp.organizeImportsOnFormat": true,
   "csharp.semanticHighlighting.enabled": true,
   "csharp.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
   "csharp.inlayHints.enableInlayHintsForImplicitVariableTypes": true,
@@ -76,7 +75,6 @@
 
   // Project specific
   "dotnet.projectSelector": "${workspaceFolder}/Clauder.slnx",
-  "omnisharp.defaultLaunchSolution": "${workspaceFolder}/Clauder.slnx",
 
   // Recommended extensions (will show notification)
   "extensions.recommendations": [
@@ -89,5 +87,7 @@
     "esbenp.prettier-vscode",
     "christian-kohler.path-intellisense",
     "wayou.vscode-todo-highlight"
-  ]
+  ],
+  "dotnet.defaultSolution": "${workspaceFolder}/Clauder.slnx",
+  "dotnet.formatting.organizeImportsOnFormat": true
 }
