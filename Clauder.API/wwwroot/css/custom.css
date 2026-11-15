@@ -464,3 +464,75 @@ body.has-bottom-nav {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Wizard Stepper Styles */
+.wizard-card {
+  border-radius: 16px;
+}
+
+.wizard-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 72px;
+}
+
+.wizard-step .step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #6c757d;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.wizard-step .step-label {
+  font-size: 0.78rem;
+  margin-top: 6px;
+  color: #6c757d;
+  font-weight: 500;
+  text-align: center;
+}
+
+.wizard-step.active .step-circle {
+  background: var(--primary-color, #ff6b6b);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
+}
+
+.wizard-step.active .step-label {
+  color: var(--primary-color, #ff6b6b);
+  font-weight: 700;
+}
+
+.wizard-step.completed .step-circle {
+  background: #198754;
+  color: #fff;
+}
+
+.wizard-step-line {
+  flex: 1;
+  height: 2px;
+  background: #dee2e6;
+  margin-bottom: 20px;
+}
+
+.recipe-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: calc(0.375rem - 1px);
+  border-top-right-radius: calc(0.375rem - 1px);
+}

@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FF6B6B">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/custom.css" rel="stylesheet">
+  <link href="css/custom.css?v=2.0.0" rel="stylesheet">
 </head>
 <body>
   <!-- Login Section -->
@@ -54,9 +54,9 @@
     <!-- Header -->
     <nav class="navbar navbar-dark sticky-top">
       <div class="container-fluid">
-        <span class="navbar-brand">
+        <a href="#" class="navbar-brand text-decoration-none" data-navigate="home" title="Torna alla Home">
           <span class="emoji">🍝</span>Claude'r
-        </span>
+        </a>
         <div class="d-flex align-items-center gap-3">
           <span class="text-white" id="userDisplayName"></span>
           <button id="logoutBtn" class="btn btn-outline-light btn-sm">Esci</button>
@@ -107,81 +107,178 @@
       </button>
     </div>
 
-    <!-- Create Recipe Page -->
+    <!-- Create / Edit Recipe Wizard Page -->
     <div data-page="create-recipe" style="display: none;">
       <div class="hero-section">
-        <h1>✨ Crea Ricetta</h1>
-        <p>Condividi la tua ricetta con la comunità</p>
+        <h1 id="wizardPageTitle">✨ Crea Ricetta</h1>
+        <p id="wizardPageSubtitle">Segui i passaggi per condividere la tua ricetta</p>
       </div>
 
       <div class="container mb-5">
-        <div class="card">
-          <div class="card-body">
+        <div class="wizard-card card shadow-sm border-0">
+          <div class="card-body p-4">
+            <!-- Stepper Header -->
+            <div class="wizard-stepper mb-4">
+              <div class="wizard-step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Info Generali</div>
+              </div>
+              <div class="wizard-step-line"></div>
+              <div class="wizard-step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Ingredienti</div>
+              </div>
+              <div class="wizard-step-line"></div>
+              <div class="wizard-step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Multimedia</div>
+              </div>
+              <div class="wizard-step-line"></div>
+              <div class="wizard-step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Istruzioni & Tempi</div>
+              </div>
+            </div>
+
             <form id="createRecipeForm">
-              <div class="mb-3">
-                <label class="form-label">Titolo Ricetta *</label>
-                <input type="text" id="newRecipeTitle" class="form-control" placeholder="Es: Pasta alla Carbonara" required>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Descrizione *</label>
-                <textarea id="newRecipeDescription" class="form-control" rows="3" placeholder="Descrivi la tua ricetta..." required></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Istruzioni</label>
-                <textarea id="newRecipeInstructions" class="form-control" rows="4" placeholder="Passaggi di preparazione..."></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Foto e video</label>
-                <input type="file" id="newRecipeMedia" class="form-control" accept="image/*,video/*" multiple>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 col-12">
-                  <label class="form-label">Nazionalità</label>
-                  <select id="newRecipeNationality" class="form-select">
-                    <option value="Italiana">Italiana 🇮🇹</option>
-                    <option value="Giapponese">Giapponese 🇯🇵</option>
-                    <option value="Messicana">Messicana 🇲🇽</option>
-                    <option value="Cinese">Cinese 🇨🇳</option>
-                    <option value="Francese">Francese 🇫🇷</option>
-                    <option value="Americana">Americana 🇺🇸</option>
-                  </select>
+              <!-- Step 1: Informazioni Generali -->
+              <div class="wizard-pane" data-pane="1">
+                <h5 class="mb-3 fw-bold">📝 Informazioni Generali</h5>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Titolo Ricetta *</label>
+                  <input type="text" id="newRecipeTitle" class="form-control form-control-lg" placeholder="Es: Pasta alla Carbonara" required>
                 </div>
-                <div class="col-md-6 col-12">
-                  <label class="form-label">Tipo</label>
-                  <select id="newRecipeType" class="form-select">
-                    <option value="Primo">Primo 🍝</option>
-                    <option value="Secondo">Secondo 🍗</option>
-                    <option value="Dolce">Dolce 🍰</option>
-                    <option value="Antipasto">Antipasto 🥗</option>
-                    <option value="Contorno">Contorno 🥦</option>
-                    <option value="Bevanda">Bevanda 🥤</option>
-                  </select>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Descrizione *</label>
+                  <textarea id="newRecipeDescription" class="form-control" rows="3" placeholder="Descrivi brevemente la tua ricetta..." required></textarea>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6 col-12">
+                    <label class="form-label fw-semibold">Nazionalità</label>
+                    <select id="newRecipeNationality" class="form-select">
+                      <option value="Italiana">Italiana 🇮🇹</option>
+                      <option value="Giapponese">Giapponese 🇯🇵</option>
+                      <option value="Messicana">Messicana 🇲🇽</option>
+                      <option value="Cinese">Cinese 🇨🇳</option>
+                      <option value="Francese">Francese 🇫🇷</option>
+                      <option value="Americana">Americana 🇺🇸</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6 col-12">
+                    <label class="form-label fw-semibold">Tipo</label>
+                    <select id="newRecipeType" class="form-select">
+                      <option value="Primo">Primo 🍝</option>
+                      <option value="Secondo">Secondo 🍗</option>
+                      <option value="Dolce">Dolce 🍰</option>
+                      <option value="Antipasto">Antipasto 🥗</option>
+                      <option value="Contorno">Contorno 🥦</option>
+                      <option value="Bevanda">Bevanda 🥤</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div class="row mt-3">
-                <div class="col-md-4 col-6">
-                  <label class="form-label">Porzioni</label>
-                  <input type="number" id="newRecipeServings" class="form-control" value="4" min="1">
+              <!-- Step 2: Ingredienti e Quantità -->
+              <div class="wizard-pane" data-pane="2" style="display: none;">
+                <h5 class="mb-3 fw-bold">🥕 Ingredienti e Quantità</h5>
+                <div class="card bg-light border-0 p-3 mb-3">
+                  <div class="row g-2 align-items-end">
+                    <div class="col-md-5 col-12">
+                      <label class="form-label small fw-semibold">Ingrediente (Anagrafica)</label>
+                      <select id="wizardIngredientSelect" class="form-select">
+                        <option value="">Seleziona ingrediente...</option>
+                        <option value="__new__">+ Aggiungi nuovo ingrediente...</option>
+                      </select>
+                    </div>
+                    <div class="col-md-5 col-12" id="wizardNewIngredientWrap" style="display: none;">
+                      <label class="form-label small fw-semibold">Nuovo Ingrediente *</label>
+                      <input type="text" id="wizardNewIngredientName" class="form-control" placeholder="Es: Guanciale">
+                    </div>
+                    <div class="col-md-2 col-5">
+                      <label class="form-label small fw-semibold">Quantità *</label>
+                      <input type="number" id="wizardIngredientQty" class="form-control" value="100" min="0.1" step="any">
+                    </div>
+                    <div class="col-md-3 col-4">
+                      <label class="form-label small fw-semibold">Unità</label>
+                      <select id="wizardIngredientUnit" class="form-select">
+                        <option value="g">g (grammi)</option>
+                        <option value="kg">kg (chilogrammi)</option>
+                        <option value="ml">ml (millilitri)</option>
+                        <option value="l">l (litri)</option>
+                        <option value="pz">pz (unità/numero)</option>
+                        <option value="cucchiai">cucchiai</option>
+                        <option value="cucchiaini">cucchiaini</option>
+                        <option value="q.b.">q.b.</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2 col-3 d-grid">
+                      <button type="button" id="wizardAddIngredientBtn" class="btn btn-success">+ Aggiungi</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-md-4 col-6">
-                  <label class="form-label">Prep (min)</label>
-                  <input type="number" id="newRecipePrepTime" class="form-control" value="15" min="0">
-                </div>
-                <div class="col-md-4 col-6">
-                  <label class="form-label">Cottura (min)</label>
-                  <input type="number" id="newRecipeCookTime" class="form-control" value="30" min="0">
+                <div id="wizardIngredientsList" class="list-group">
+                  <div class="text-muted text-center py-3">Nessun ingrediente aggiunto ancora.</div>
                 </div>
               </div>
 
-              <div class="d-grid gap-2 mt-4">
-                <button type="button" id="createRecipeBtn" class="btn btn-primary btn-lg">
-                  ✨ Crea Ricetta
-                </button>
+              <!-- Step 3: Multimedia -->
+              <div class="wizard-pane" data-pane="3" style="display: none;">
+                <h5 class="mb-3 fw-bold">📸 Foto e Video</h5>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6 col-12">
+                    <label class="form-label fw-semibold">Carica Foto o Video</label>
+                    <input type="file" id="newRecipeMedia" class="form-control" accept="image/*,video/*" multiple>
+                    <small class="text-muted">Puoi selezionare più immagini o file video (max 100MB).</small>
+                  </div>
+                  <div class="col-md-6 col-12">
+                    <label class="form-label fw-semibold">Oppure aggiungi Link Video (YouTube / URL)</label>
+                    <div class="input-group">
+                      <input type="url" id="wizardVideoLinkInput" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                      <button type="button" id="wizardAddVideoLinkBtn" class="btn btn-outline-primary">Aggiungi Video</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="wizardMediaGallery" class="row g-3">
+                  <div class="col-12 text-muted text-center py-3">Nessun file multimediale caricato.</div>
+                </div>
+              </div>
+
+              <!-- Step 4: Istruzioni e Tempi -->
+              <div class="wizard-pane" data-pane="4" style="display: none;">
+                <h5 class="mb-3 fw-bold">👨‍🍳 Istruzioni e Tempi</h5>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-4 col-6">
+                    <label class="form-label fw-semibold">Porzioni</label>
+                    <input type="number" id="newRecipeServings" class="form-control" value="4" min="1">
+                  </div>
+                  <div class="col-md-4 col-6">
+                    <label class="form-label fw-semibold">Prep (min)</label>
+                    <input type="number" id="newRecipePrepTime" class="form-control" value="15" min="0">
+                  </div>
+                  <div class="col-md-4 col-12">
+                    <label class="form-label fw-semibold">Cottura (min)</label>
+                    <input type="number" id="newRecipeCookTime" class="form-control" value="30" min="0">
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Istruzioni dettagliate</label>
+                  <textarea id="newRecipeInstructions" class="form-control" rows="6" placeholder="Descrivi i passaggi di preparazione..."></textarea>
+                </div>
+              </div>
+
+              <!-- Wizard Navigation -->
+              <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <button type="button" id="wizardPrevBtn" class="btn btn-outline-secondary" style="display: none;">← Indietro</button>
+                <div class="ms-auto d-flex gap-2">
+                  <button type="button" id="wizardCancelBtn" class="btn btn-light" data-navigate="home">Annulla</button>
+                  <button type="button" id="wizardNextBtn" class="btn btn-primary">Avanti →</button>
+                  <button type="button" id="createRecipeBtn" class="btn btn-success btn-lg" style="display: none;">
+                    ✨ Salva Ricetta
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -296,7 +393,7 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=2.0.0"></script>
   <style>
     body {
       padding-bottom: 80px;

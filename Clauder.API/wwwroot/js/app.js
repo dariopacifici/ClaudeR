@@ -188,7 +188,10 @@ function getEmojiForsRecipeType(type) {
 }
 
 function renderRecipeCover(recipe) {
-  const cover = recipe.mediaFiles?.find(m => !m.reviewId && m.mediaType === 'image');
+  const images = (recipe.mediaFiles || [])
+    .filter(m => !m.reviewId && m.mediaType === 'image')
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.id - b.id);
+  const cover = images.find(m => m.isPreview) || images[1] || images[0];
   if (cover) {
     return `<img src="${cover.fileUrl}" alt="${recipe.title}" style="width: 100%; height: 200px; object-fit: cover;">`;
   }
@@ -199,15 +202,33 @@ function renderRecipeCover(recipe) {
   `;
 }
 
+function getVideoEmbedUrl(url) {
+  if (!url) return null;
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  return null;
+}
+
 function renderRecipeMedia(recipe) {
-  const media = recipe.mediaFiles?.filter(m => !m.reviewId) || [];
+  const media = (recipe.mediaFiles || [])
+    .filter(m => !m.reviewId)
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.id - b.id);
   if (media.length === 0) return '';
 
   return `
     <div class="mb-3">
-      ${media.map(m => m.mediaType === 'video'
-        ? `<video src="${m.fileUrl}" controls class="w-100 rounded mb-2"></video>`
-        : `<img src="${m.fileUrl}" alt="" class="w-100 rounded mb-2">`).join('')}
+      ${media.map(m => {
+        if (m.mediaType === 'video') {
+          const embedUrl = getVideoEmbedUrl(m.fileUrl);
+          if (embedUrl) {
+            return `<div class="ratio ratio-16x9 mb-2"><iframe src="${embedUrl}" allowfullscreen class="rounded"></iframe></div>`;
+          }
+          return `<video src="${m.fileUrl}" controls class="w-100 rounded mb-2"></video>`;
+        }
+        return `<img src="${m.fileUrl}" alt="" class="w-100 rounded mb-2">`;
+      }).join('')}
     </div>
   `;
 }
@@ -311,10 +332,80 @@ async function viewRecipe(recipeId) {
         ${renderRatingStars(recipe)}
       </div>
       ${renderOwnerActions(recipe)}
+      <hr class="my-4">
+      <div class="mb-3">
+        <h6>💬 Commenti</h6>
+        <div id="recipeCommentsList" class="mb-3">
+          <div class="text-muted small">Caricamento commenti...</div>
+        </div>
+        <div class="input-group">
+          <textarea id="newCommentText" class="form-control" rows="2" placeholder="Scrivi un commento, un consiglio o una variante..."></textarea>
+          <button class="btn btn-primary" type="button" onclick="submitComment(${recipe.id})">Invia</button>
+        </div>
+      </div>
     `;
     modal.show();
+    loadRecipeComments(recipe.id);
   } catch (error) {
     console.error('Error viewing recipe:', error);
+  }
+}
+
+async function loadRecipeComments(recipeId) {
+  const container = document.getElementById('recipeCommentsList');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API_BASE_URL}/reviews/recipe/${recipeId}`);
+    const comments = await res.json();
+    if (!comments || comments.length === 0) {
+      container.innerHTML = '<div class="text-muted small">Nessun commento ancora. Sii il primo!</div>';
+      return;
+    }
+    container.innerHTML = comments.map(c => `
+      <div class="card bg-light border-0 mb-2">
+        <div class="card-body py-2 px-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <strong class="small">${c.user?.displayName || c.user?.username || 'Utente'}</strong>
+            <small class="text-muted">${new Date(c.createdAt).toLocaleDateString('it-IT')}</small>
+          </div>
+          <p class="mb-0 small">${c.content}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = '<div class="text-danger small">Errore nel caricamento dei commenti.</div>';
+  }
+}
+
+async function submitComment(recipeId) {
+  const textarea = document.getElementById('newCommentText');
+  const content = textarea?.value.trim();
+  if (!content) {
+    showNotification('Scrivi un commento prima di inviare', 'warning');
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipeId,
+        userId: currentUser?.id || 1,
+        title: 'Commento',
+        content,
+        isPublished: true
+      })
+    });
+    if (res.ok) {
+      textarea.value = '';
+      showNotification('Commento aggiunto!', 'success');
+      await loadRecipeComments(recipeId);
+    } else {
+      showNotification('Errore durante l\'invio del commento', 'danger');
+    }
+  } catch (err) {
+    console.error('Error submitting comment:', err);
+    showNotification('Errore di connessione', 'danger');
   }
 }
 
@@ -356,8 +447,133 @@ async function deleteRecipe(recipeId) {
   }
 }
 
+let wizardStep = 1;
+let wizardIngredients = []; // { id?, ingredientId?, name, quantity, unit, isNew? }
+let wizardMedia = []; // { id?, file?, url, mediaType, isPreview, isExisting? }
+let removedIngredientIds = [];
+let allIngredients = [];
+
+async function loadIngredientsRegistry() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/ingredients`);
+    allIngredients = await res.json();
+    const select = document.getElementById('wizardIngredientSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">Seleziona ingrediente...</option>' +
+      allIngredients.map(i => `<option value="${i.id}" data-unit="${i.unit || 'g'}">${i.name}</option>`).join('') +
+      '<option value="__new__">+ Aggiungi nuovo ingrediente...</option>';
+  } catch (err) {
+    console.error('Error loading ingredients:', err);
+  }
+}
+
+function setWizardStep(step) {
+  if (step < 1 || step > 4) return;
+  if (step > wizardStep && wizardStep === 1) {
+    const title = document.getElementById('newRecipeTitle').value.trim();
+    const desc = document.getElementById('newRecipeDescription').value.trim();
+    if (!title || !desc) {
+      showNotification('Inserisci titolo e descrizione prima di continuare', 'warning');
+      return;
+    }
+  }
+  wizardStep = step;
+  document.querySelectorAll('.wizard-pane').forEach(p => {
+    p.style.display = Number(p.dataset.pane) === step ? 'block' : 'none';
+  });
+  document.querySelectorAll('.wizard-step').forEach(s => {
+    const sNum = Number(s.dataset.step);
+    s.classList.toggle('active', sNum === step);
+    s.classList.toggle('completed', sNum < step);
+  });
+  document.getElementById('wizardPrevBtn').style.display = step > 1 ? 'inline-block' : 'none';
+  document.getElementById('wizardNextBtn').style.display = step < 4 ? 'inline-block' : 'none';
+  document.getElementById('createRecipeBtn').style.display = step === 4 ? 'inline-block' : 'none';
+}
+
+function renderWizardIngredients() {
+  const list = document.getElementById('wizardIngredientsList');
+  if (!list) return;
+  if (wizardIngredients.length === 0) {
+    list.innerHTML = '<div class="text-muted text-center py-3">Nessun ingrediente aggiunto ancora.</div>';
+    return;
+  }
+  list.innerHTML = wizardIngredients.map((item, idx) => `
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>${item.name}</strong>
+        <span class="badge bg-secondary ms-2">${item.quantity} ${item.unit || ''}</span>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeWizardIngredient(${idx})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function removeWizardIngredient(idx) {
+  const item = wizardIngredients[idx];
+  if (item?.id) removedIngredientIds.push(item.id);
+  wizardIngredients.splice(idx, 1);
+  renderWizardIngredients();
+}
+
+function renderWizardMedia() {
+  const gallery = document.getElementById('wizardMediaGallery');
+  if (!gallery) return;
+  if (wizardMedia.length === 0) {
+    gallery.innerHTML = '<div class="col-12 text-muted text-center py-3">Nessun file multimediale caricato.</div>';
+    return;
+  }
+  gallery.innerHTML = wizardMedia.map((m, idx) => {
+    const previewHtml = m.mediaType === 'video'
+      ? `<div class="bg-dark text-white d-flex align-items-center justify-content-center rounded" style="height:120px;">🎥 Video</div>`
+      : `<img src="${m.url}" class="w-100 rounded" style="height:120px; object-fit:cover;">`;
+    return `
+      <div class="col-md-4 col-6">
+        <div class="card h-100 shadow-sm ${m.isPreview ? 'border-warning border-2' : ''}">
+          <div class="p-2">${previewHtml}</div>
+          <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pt-0">
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-secondary" onclick="moveWizardMedia(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>↑</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="moveWizardMedia(${idx}, 1)" ${idx === wizardMedia.length - 1 ? 'disabled' : ''}>↓</button>
+            </div>
+            ${m.mediaType === 'image' ? `<button type="button" class="btn btn-sm ${m.isPreview ? 'btn-warning' : 'btn-outline-warning'}" onclick="setWizardPreview(${idx})" title="Imposta come anteprima Home">⭐</button>` : ''}
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeWizardMedia(${idx})" title="Elimina">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function moveWizardMedia(idx, delta) {
+  const target = idx + delta;
+  if (target < 0 || target >= wizardMedia.length) return;
+  const [item] = wizardMedia.splice(idx, 1);
+  wizardMedia.splice(target, 0, item);
+  renderWizardMedia();
+}
+
+function setWizardPreview(idx) {
+  wizardMedia.forEach((m, i) => { m.isPreview = (i === idx); });
+  renderWizardMedia();
+}
+
+async function removeWizardMedia(idx) {
+  const item = wizardMedia[idx];
+  if (item?.id && item.isExisting) {
+    try {
+      await fetch(`${API_BASE_URL}/mediafiles/${item.id}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Error deleting media:', err);
+    }
+  }
+  wizardMedia.splice(idx, 1);
+  renderWizardMedia();
+}
+
 async function editRecipe(recipeId) {
   try {
+    await loadIngredientsRegistry();
     const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}`, {
       headers: { 'X-User-Id': String(currentUser.id) }
     });
@@ -372,8 +588,33 @@ async function editRecipe(recipeId) {
     document.getElementById('newRecipePrepTime').value = recipe.prepTimeMinutes;
     document.getElementById('newRecipeCookTime').value = recipe.cookTimeMinutes;
 
+    wizardIngredients = (recipe.recipeIngredients || []).map(ri => ({
+      id: ri.id,
+      ingredientId: ri.ingredientId,
+      name: ri.ingredient?.name || 'Ingrediente',
+      quantity: ri.quantity,
+      unit: ri.unit || ri.ingredient?.unit || '',
+      isExisting: true
+    }));
+    removedIngredientIds = [];
+
+    wizardMedia = (recipe.mediaFiles || [])
+      .filter(m => !m.reviewId)
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0) || a.id - b.id)
+      .map(m => ({
+        id: m.id,
+        url: m.fileUrl,
+        mediaType: m.mediaType,
+        isPreview: m.isPreview,
+        isExisting: true
+      }));
+
     editingRecipeId = recipeId;
+    document.getElementById('wizardPageTitle').textContent = '✏️ Modifica Ricetta';
     document.getElementById('createRecipeBtn').textContent = '💾 Salva modifiche';
+    renderWizardIngredients();
+    renderWizardMedia();
+    setWizardStep(1);
     bootstrap.Modal.getInstance(document.getElementById('recipeModal'))?.hide();
     navigateToPage('create-recipe');
   } catch (error) {
@@ -384,8 +625,16 @@ async function editRecipe(recipeId) {
 
 function resetRecipeForm() {
   editingRecipeId = null;
+  wizardIngredients = [];
+  wizardMedia = [];
+  removedIngredientIds = [];
   document.getElementById('createRecipeForm').reset();
-  document.getElementById('createRecipeBtn').textContent = '✨ Crea Ricetta';
+  document.getElementById('wizardPageTitle').textContent = '✨ Crea Ricetta';
+  document.getElementById('createRecipeBtn').textContent = '✨ Salva Ricetta';
+  renderWizardIngredients();
+  renderWizardMedia();
+  setWizardStep(1);
+  loadIngredientsRegistry();
 }
 
 async function loadMyRecipes() {
@@ -511,16 +760,76 @@ async function createRecipe() {
       if (!publishResponse.ok) throw new Error('Publish failed');
     }
 
-    for (const file of document.getElementById('newRecipeMedia').files) {
-      const mediaForm = new FormData();
-      mediaForm.append('file', file);
-      mediaForm.append('recipeId', recipe.id);
-      mediaForm.append('uploadedByUserId', currentUser.id);
-      const uploadResponse = await fetch(`${API_BASE_URL}/mediafiles/upload`, { method: 'POST', body: mediaForm });
-      if (!uploadResponse.ok) throw new Error('Upload failed');
+    // 1. Remove deleted ingredients (if editing)
+    for (const riId of removedIngredientIds) {
+      await fetch(`${API_BASE_URL}/ingredients/recipe-ingredient/${riId}`, { method: 'DELETE' });
     }
 
-    alert(wasEditing ? 'Ricetta aggiornata!' : 'Ricetta creata con successo!');
+    // 2. Add new ingredients (auto-creating in global registry if needed)
+    for (const ing of wizardIngredients) {
+      if (ing.isExisting) continue;
+      await fetch(`${API_BASE_URL}/ingredients/add-to-recipe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipeId: recipe.id,
+          ingredientId: ing.ingredientId || null,
+          ingredientName: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit
+        })
+      });
+    }
+
+    // 3. Upload new media files & links, keeping track of final ordered IDs
+    const orderedIds = [];
+    let previewId = null;
+    for (const m of wizardMedia) {
+      let mediaId = m.id;
+      if (!m.isExisting) {
+        if (m.file) {
+          const mediaForm = new FormData();
+          mediaForm.append('file', m.file);
+          mediaForm.append('recipeId', recipe.id);
+          mediaForm.append('uploadedByUserId', currentUser.id);
+          const uploadResponse = await fetch(`${API_BASE_URL}/mediafiles/upload`, { method: 'POST', body: mediaForm });
+          if (!uploadResponse.ok) throw new Error('Upload failed');
+          const uploaded = await uploadResponse.json();
+          mediaId = uploaded.id;
+        } else if (m.url) {
+          const linkResponse = await fetch(`${API_BASE_URL}/mediafiles/link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipeId: recipe.id,
+              url: m.url,
+              mediaType: 'video',
+              uploadedByUserId: currentUser.id
+            })
+          });
+          if (!linkResponse.ok) throw new Error('Video link failed');
+          const linked = await linkResponse.json();
+          mediaId = linked.id;
+        }
+      }
+      if (mediaId) {
+        orderedIds.push(mediaId);
+        if (m.isPreview) previewId = mediaId;
+      }
+    }
+
+    if (orderedIds.length > 0) {
+      await fetch(`${API_BASE_URL}/mediafiles/recipe/${recipe.id}/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderedIds)
+      });
+    }
+    if (previewId) {
+      await fetch(`${API_BASE_URL}/mediafiles/${previewId}/set-preview`, { method: 'PUT' });
+    }
+
+    showNotification(wasEditing ? 'Ricetta aggiornata!' : 'Ricetta creata con successo!', 'success');
     resetRecipeForm();
     navigateToPage('home');
     loadRecipes();
@@ -572,6 +881,105 @@ function setupEventListeners() {
 
   // Create Recipe
   document.getElementById('createRecipeBtn')?.addEventListener('click', createRecipe);
+
+  // Wizard navigation
+  document.getElementById('wizardNextBtn')?.addEventListener('click', () => setWizardStep(wizardStep + 1));
+  document.getElementById('wizardPrevBtn')?.addEventListener('click', () => setWizardStep(wizardStep - 1));
+  document.querySelectorAll('.wizard-step').forEach(el => {
+    el.addEventListener('click', () => setWizardStep(Number(el.dataset.step)));
+  });
+
+  // Wizard ingredients
+  document.getElementById('wizardIngredientSelect')?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    const wrap = document.getElementById('wizardNewIngredientWrap');
+    wrap.style.display = val === '__new__' ? 'block' : 'none';
+    if (val && val !== '__new__') {
+      const opt = e.target.selectedOptions[0];
+      const unit = opt?.dataset?.unit;
+      if (unit) document.getElementById('wizardIngredientUnit').value = unit;
+    }
+  });
+
+  document.getElementById('wizardAddIngredientBtn')?.addEventListener('click', async () => {
+    const select = document.getElementById('wizardIngredientSelect');
+    const val = select.value;
+    const qty = parseFloat(document.getElementById('wizardIngredientQty').value);
+    const unit = document.getElementById('wizardIngredientUnit').value;
+
+    if (!val || isNaN(qty) || qty <= 0) {
+      showNotification('Seleziona un ingrediente e inserisci una quantità valida', 'warning');
+      return;
+    }
+
+    let ingredientId = null;
+    let name = '';
+
+    if (val === '__new__') {
+      name = document.getElementById('wizardNewIngredientName').value.trim();
+      if (!name) {
+        showNotification('Inserisci il nome del nuovo ingrediente', 'warning');
+        return;
+      }
+      // Save immediately to global registry (auto-learning)
+      try {
+        const res = await fetch(`${API_BASE_URL}/ingredients`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, unit })
+        });
+        if (res.ok) {
+          const created = await res.json();
+          ingredientId = created.id;
+          await loadIngredientsRegistry();
+        }
+      } catch (err) {
+        console.error('Error creating ingredient:', err);
+      }
+      document.getElementById('wizardNewIngredientName').value = '';
+      document.getElementById('wizardNewIngredientWrap').style.display = 'none';
+    } else {
+      ingredientId = parseInt(val);
+      name = select.selectedOptions[0].textContent;
+    }
+
+    wizardIngredients.push({ ingredientId, name, quantity: qty, unit, isExisting: false });
+    select.value = '';
+    renderWizardIngredients();
+  });
+
+  // Wizard media upload & video link
+  document.getElementById('newRecipeMedia')?.addEventListener('change', (e) => {
+    for (const file of e.target.files) {
+      const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+      wizardMedia.push({
+        file,
+        url: URL.createObjectURL(file),
+        mediaType,
+        isPreview: false,
+        isExisting: false
+      });
+    }
+    e.target.value = '';
+    renderWizardMedia();
+  });
+
+  document.getElementById('wizardAddVideoLinkBtn')?.addEventListener('click', () => {
+    const input = document.getElementById('wizardVideoLinkInput');
+    const url = input.value.trim();
+    if (!url) {
+      showNotification('Inserisci un URL video valido', 'warning');
+      return;
+    }
+    wizardMedia.push({ url, mediaType: 'video', isPreview: false, isExisting: false });
+    input.value = '';
+    renderWizardMedia();
+  });
+
+  // Load ingredients registry when opening create-recipe via FAB
+  document.querySelector('[data-navigate="create-recipe"]')?.addEventListener('click', () => {
+    if (!editingRecipeId) resetRecipeForm();
+  });
 
   // Filter recipes
   document.getElementById('filterNationality')?.addEventListener('change', () => {

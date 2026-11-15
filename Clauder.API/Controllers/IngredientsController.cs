@@ -101,6 +101,19 @@ public class IngredientsController : ControllerBase
 
         return recipeIngredient;
     }
+
+    [HttpDelete("recipe-ingredient/{id}")]
+    public async Task<IActionResult> RemoveIngredientFromRecipe(int id)
+    {
+        var recipeIngredient = await _context.RecipeIngredients.FindAsync(id);
+        if (recipeIngredient == null)
+            return NotFound();
+
+        _context.RecipeIngredients.Remove(recipeIngredient);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
 
 public class CreateIngredientRequest

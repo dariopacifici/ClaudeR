@@ -90,10 +90,85 @@ public class MediaFilesController : ControllerBase
     {
         var media = await _context.MediaFiles
             .Where(m => m.RecipeId == recipeId && m.ReviewId == null)
+            .OrderBy(m => m.DisplayOrder)
+            .ThenBy(m => m.Id)
             .Include(m => m.UploadedByUser)
             .ToListAsync();
 
         return media;
+    }
+
+    [HttpPost("link")]
+    public async Task<ActionResult<MediaFile>> AddMediaLink([FromBody] AddMediaLinkRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Url))
+            return BadRequest("URL is required");
+
+        var recipe = await _context.Recipes.FindAsync(request.RecipeId);
+        if (recipe == null)
+            return NotFound("Recipe not found");
+
+        var maxOrder = await _context.MediaFiles
+            .Where(m => m.RecipeId == request.RecipeId && m.ReviewId == null)
+            .Select(m => (int?)m.DisplayOrder)
+            .MaxAsync() ?? -1;
+
+        var mediaFile = new MediaFile
+        {
+            RecipeId = request.RecipeId,
+            FileName = "external-link",
+            MediaType = request.MediaType ?? "video",
+            FileUrl = request.Url.Trim(),
+            FileSizeBytes = 0,
+            Caption = request.Caption,
+            UploadedByUserId = request.UploadedByUserId,
+            DisplayOrder = maxOrder + 1
+        };
+
+        _context.MediaFiles.Add(mediaFile);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetMediaFile), new { id = mediaFile.Id }, mediaFile);
+    }
+
+    [HttpPut("recipe/{recipeId}/reorder")]
+    public async Task<IActionResult> ReorderRecipeMedia(int recipeId, [FromBody] List<int> orderedIds)
+    {
+        var media = await _context.MediaFiles
+            .Where(m => m.RecipeId == recipeId && m.ReviewId == null)
+            .ToListAsync();
+
+        for (int i = 0; i < orderedIds.Count; i++)
+        {
+            var item = media.FirstOrDefault(m => m.Id == orderedIds[i]);
+            if (item != null)
+            {
+                item.DisplayOrder = i;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPut("{id}/set-preview")]
+    public async Task<IActionResult> SetPreviewImage(int id)
+    {
+        var target = await _context.MediaFiles.FindAsync(id);
+        if (target == null)
+            return NotFound();
+
+        var recipeMedia = await _context.MediaFiles
+            .Where(m => m.RecipeId == target.RecipeId && m.ReviewId == null)
+            .ToListAsync();
+
+        foreach (var item in recipeMedia)
+        {
+            item.IsPreview = (item.Id == id);
+        }
+
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [HttpGet("review/{reviewId}")]
@@ -114,10 +189,13 @@ public class MediaFilesController : ControllerBase
         if (mediaFile == null)
             return NotFound();
 
-        var filePath = Path.Combine(_env.ContentRootPath, "uploads", mediaFile.FileName);
-        if (System.IO.File.Exists(filePath))
+        if (mediaFile.FileName != "external-link")
         {
-            System.IO.File.Delete(filePath);
+            var filePath = Path.Combine(_env.ContentRootPath, "uploads", mediaFile.FileName);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
         }
 
         _context.MediaFiles.Remove(mediaFile);
@@ -125,4 +203,13 @@ public class MediaFilesController : ControllerBase
 
         return NoContent();
     }
+}
+
+public class AddMediaLinkRequest
+{
+    public int RecipeId { get; set; }
+    public required string Url { get; set; }
+    public string? MediaType { get; set; }
+    public string? Caption { get; set; }
+    public int UploadedByUserId { get; set; }
 }

@@ -31,6 +31,10 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ClauerDbContext>();
     dbContext.Database.EnsureCreated();
 
+    // Ensure new MediaFiles columns exist on existing SQLite databases
+    try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE MediaFiles ADD COLUMN DisplayOrder INTEGER NOT NULL DEFAULT 0;"); } catch { }
+    try { dbContext.Database.ExecuteSqlRaw("ALTER TABLE MediaFiles ADD COLUMN IsPreview INTEGER NOT NULL DEFAULT 0;"); } catch { }
+
     if (!dbContext.Users.Any())
     {
         var users = new[]

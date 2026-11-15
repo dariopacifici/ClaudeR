@@ -18,5 +18,7 @@ public class MediaFile
     public string? Caption { get; set; }
     public int UploadedByUserId { get; set; }
     public User? UploadedByUser { get; set; }
+    public int DisplayOrder { get; set; } = 0;
+    public bool IsPreview { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
